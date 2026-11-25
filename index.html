@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wester&Maggile</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: {
+              900: '#0f172a',
+              800: '#1e293b',
+              700: '#334155',
+            },
+            gold: {
+              500: '#c59b27',
+              600: '#a6801c',
+              100: '#fef9e7',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #fff !important; }
+      .print-area { box-shadow: none !important; border: 1px solid #cbd5e1 !important; }
+    }
+    .tab-btn.active {
+      border-bottom: 3px solid #c59b27;
+      color: #0f172a;
+      font-weight: 700;
+      background-color: #fef9e7;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- Encabezado Superior -->
+  <header class="bg-navy-900 text-white shadow-md no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-gold-500 text-navy-900 flex items-center justify-center font-extrabold text-xl shadow">
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold tracking-tight">Wester&Maggile</h1>
+            <span class="text-xs uppercase tracking-wider bg-gold-500/20 text-gold-500 border border-gold-500/40 px-2 py-0.5 rounded-full font-semibold">
+            </span>
+          </div>
+          <p class="text-xs text-slate-300">Asistente de Cómputo de Plazos, Triaje de Casos y Redacción Forense</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <span class="bg-navy-800 border border-slate-700 px-3 py-1.5 rounded-md text-slate-200">
+          URP: <strong class="text-gold-500">S/ 550.00</strong>
+        </span>
+        <button onclick="resetAll()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 px-3 py-1.5 rounded-md transition cursor-pointer">
+          Reiniciar datos
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navegación por Pestañas -->
+  <nav class="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex overflow-x-auto gap-1">
+      <button id="tab-plazos" onclick="switchTab('plazos')" class="tab-btn active px-4 py-3.5 text-sm text-slate-600 hover:text-navy-900 whitespace-nowrap transition cursor-pointer">
+        1. Calculadora de Plazos
+      </button>
+      <button id="tab-triaje" onclick="switchTab('triaje')" class="tab-btn px-4 py-3.5 text-sm text-slate-600 hover:text-navy-900 whitespace-nowrap transition cursor-pointer">
+        2. Triaje y Clasificación de Casos
+      </button>
+      <button id="tab-escritos" onclick="switchTab('escritos')" class="tab-btn px-4 py-3.5 text-sm text-slate-600 hover:text-navy-900 whitespace-nowrap transition cursor-pointer">
+        3. Generador de Escritos
+      </button>
+    </div>
+  </nav>
+
+  <!-- Contenido Principal -->
+  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 flex-1">
+
+    <!-- ========================================================= -->
+    <!-- MÓDULO 1: CALCULADORA DE PLAZOS PROCESALES                -->
+    <!-- ========================================================= -->
+    <section id="panel-plazos" class="space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Formulario -->
+        <div class="lg:col-span-5 bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-4 no-print">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <h2 class="text-base font-bold text-navy-900">Parámetros del Plazo</h2>
+              <p class="text-xs text-slate-500">Cómputo de días hábiles (Perú)</p>
+            </div>
+            <button onclick="fillDeadlineExample()" class="text-xs bg-slate-100 hover:bg-slate-200 text-navy-900 font-semibold px-2.5 py-1.5 rounded-md transition cursor-pointer">
+              Ejemplo rápido
+            </button>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Tipo de actuación / trámite</label>
+            <select id="plazo-preset" onchange="applyDeadlinePreset()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-gold-500 focus:outline-none">
+              <option value="3">Contestación / Traslado breve (3 días hábiles)</option>
+              <option value="5" selected>Apelación de auto / Subsanación (5 días hábiles)</option>
+              <option value="10">Absolución de traslado / Excepciones (10 días hábiles)</option>
+              <option value="15">Recurso administrativo / Reconsideración (15 días hábiles)</option>
+              <option value="30">Demanda contencioso-administrativa (30 días hábiles)</option>
+              <option value="custom">Personalizado (ingresar días)</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Fecha de notificación</label>
+              <input id="plazo-fecha" type="date" onchange="calculateDeadline()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-gold-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Días hábiles</label>
+              <input id="plazo-dias" type="number" min="1" max="365" value="5" onchange="calculateDeadline()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-gold-500 focus:outline-none" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Modalidad de notificación</label>
+            <select id="plazo-notif" onchange="calculateDeadline()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-gold-500 focus:outline-none">
+              <option value="sinoe">Casilla Electrónica / SINOE (Surte efecto el mismo día hábil)</option>
+              <option value="fisica">Notificación Física / Cédula (Surte efecto al día hábil siguiente - Art. 147° CPC)</option>
+            </select>
+          </div>
+
+          <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs text-slate-600 space-y-1">
+            <p class="font-semibold text-navy-900">Regla básica aplicada:</p>
+            <p>• Se excluyen sábados, domingos y feriados nacionales calendarios del Perú.</p>
+            <p>• Si el vencimiento cae en día inhábil, se prorroga al siguiente día hábil.</p>
+          </div>
+        </div>
+
+        <!-- Resultado y Auditoría Día por Día -->
+        <div class="lg:col-span-7 space-y-4">
+          <div id="plazo-resultado" class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+            <!-- Se llena por JS -->
+          </div>
+
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-bold text-navy-900">Auditoría del Cómputo (Día por Día)</h3>
+              <span id="plazo-contador-badge" class="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full font-medium"></span>
+            </div>
+            <div id="plazo-log" class="max-h-72 overflow-y-auto divide-y divide-slate-100 text-xs">
+              <!-- Se llena por JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- MÓDULO 2: TRIAJE Y CLASIFICACIÓN DE CASOS                 -->
+    <!-- ========================================================= -->
+    <section id="panel-triaje" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Entrada de Caso -->
+        <div class="lg:col-span-5 bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <h2 class="text-base font-bold text-navy-900">Datos del Caso o Consulta</h2>
+              <p class="text-xs text-slate-500">
+                Complete los campos a continuación para registrar el caso o consulta.
+              </p>
+            </div>
+            <button onclick="fillCaseExample()" class="text-xs bg-slate-100 hover:bg-slate-200 text-navy-900 font-semibold px-2.5 py-1.5 rounded-md transition cursor-pointer">
+              Ejemplo rápido
+            </button>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Referencia o título breve del caso</label>
+            <input id="caso-titulo" type="text" placeholder="Ej. Cobro de soles por deuda comercial" oninput="evaluateCase()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-gold-500 focus:outline-none" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Materia jurídica</label>
+              <select id="caso-materia" onchange="evaluateCase()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-gold-500 focus:outline-none">
+                <option value="civil">Civil / Contractual</option>
+                <option value="laboral">Laboral</option>
+                <option value="familia">Familia / Alimentos</option>
+                <option value="admin">Administrativo</option>
+                <option value="penal">Penal</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Urgencia percibida</label>
+              <select id="caso-urgencia" onchange="evaluateCase()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-gold-500 focus:outline-none">
+                <option value="baja">Baja (consulta o preventiva)</option>
+                <option value="media" selected>Media (plazo ordinario)</option>
+                <option value="alta">Alta (vencimiento próximo / medida cautelar)</option>
+                <option value="critica">Crítica (detención / caducidad inminente)</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Cuantía económica estimada (S/ soles)</label>
+            <input id="caso-cuantia" type="number" min="0" step="100" value="25000" oninput="evaluateCase()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-gold-500 focus:outline-none" />
+            <p id="caso-urp-equiv" class="text-[11px] text-slate-500 mt-1"></p>
+          </div>
+
+          <div class="space-y-2 pt-1">
+            <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+              <input id="caso-docs" type="checkbox" checked onchange="evaluateCase()" class="rounded border-slate-300 text-navy-900 focus:ring-gold-500" />
+              Cuenta con pruebas o documentos base (contratos, boletas, cargos)
+            </label>
+            <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+              <input id="caso-concilia" type="checkbox" onchange="evaluateCase()" class="rounded border-slate-300 text-navy-900 focus:ring-gold-500" />
+              Ya cuenta con Acta de Conciliación Extrajudicial
+            </label>
+          </div>
+        </div>
+
+        <!-- Diagnóstico de Triaje -->
+        <div id="triaje-resultado" class="lg:col-span-7 bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-5">
+          <!-- Se llena por JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- MÓDULO 3: GENERADOR DE ESCRITOS LEGALES                   -->
+    <!-- ========================================================= -->
+    <section id="panel-escritos" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Formulario del Escrito -->
+        <div class="lg:col-span-5 bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-3.5 no-print">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <h2 class="text-base font-bold text-navy-900">Datos del Escrito</h2>
+              <p class="text-xs text-slate-500"></p>
+            </div>
+            <button onclick="fillDocExample()" class="text-xs bg-slate-100 hover:bg-slate-200 text-navy-900 font-semibold px-2.5 py-1.5 rounded-md transition cursor-pointer">
+              Autocompletar
+            </button>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Plantilla de escrito</label>
+            <select id="doc-tipo" onchange="renderDocument()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-gold-500 focus:outline-none">
+              <option value="apersonamiento">1. Apersonamiento y Señalamiento de Casilla</option>
+              <option value="reconsideracion">2. Recurso de Reconsideración (TUO Ley N° 27444)</option>
+              <option value="transparencia">3. Solicitud de Acceso a la Información Pública</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Autoridad / Juzgado / Entidad destinataria</label>
+            <input id="doc-autoridad" type="text" placeholder="Ej. 12° Juzgado Civil Comercial de Lima" oninput="renderDocument()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-gold-500 focus:outline-none" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">N° de Expediente / Registro</label>
+              <input id="doc-exp" type="text" placeholder="Ej. 04512-2025-0-1817-JR-CO-12" oninput="renderDocument()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-gold-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Especialista / Funcionario</label>
+              <input id="doc-esp" type="text" placeholder="Ej. Esp. Mendoza Rojas" oninput="renderDocument()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-gold-500 focus:outline-none" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Nombre del solicitante / litigante</label>
+              <input id="doc-parte" type="text" placeholder="Ej. Carlos Alberto Quispe Huamán" oninput="renderDocument()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-gold-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">DNI / RUC</label>
+              <input id="doc-docid" type="text" placeholder="Ej. 45891234" oninput="renderDocument()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-gold-500 focus:outline-none" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Casilla Electrónica / Correo</label>
+              <input id="doc-casilla" type="text" placeholder="Ej. Casilla SINOE 88421" oninput="renderDocument()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-gold-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Abogado patrocinante y CAL</label>
+              <input id="doc-abogado" type="text" placeholder="Ej. Dra. Sofía Paredes / CAL 71204" oninput="renderDocument()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-gold-500 focus:outline-none" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Hechos / Fundamento o información solicitada</label>
+            <textarea id="doc-detalle" rows="3" placeholder="Describe brevemente el acto impugnado, nueva prueba o información requerida..." oninput="renderDocument()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-gold-500 focus:outline-none"></textarea>
+          </div>
+        </div>
+
+        <!-- Vista Previa del Escrito -->
+        <div class="lg:col-span-7 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 bg-white rounded-xl shadow-sm border border-slate-200 px-4 py-3 no-print">
+            <span class="text-xs font-semibold text-slate-600">Vista previa del borrador (editable antes de copiar/imprimir)</span>
+            <div class="flex items-center gap-2">
+              <button onclick="copyDocument()" id="btn-copy-doc" class="text-xs bg-navy-900 hover:bg-navy-800 text-white font-semibold px-3 py-1.5 rounded-md transition cursor-pointer">
+                Copiar texto
+              </button>
+              <button onclick="window.print()" class="text-xs bg-gold-500 hover:bg-gold-600 text-navy-900 font-semibold px-3 py-1.5 rounded-md transition cursor-pointer">
+                Imprimir / Guardar PDF
+              </button>
+            </div>
+          </div>
+
+          <div id="doc-preview" contenteditable="true" class="print-area bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8 font-serif text-sm leading-relaxed text-slate-900 min-h-[460px] focus:outline-none focus:ring-2 focus:ring-gold-500/50">
+            <!-- Se llena por JS -->
+          </div>
+        </div>
+      </div>
+
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 no-print">
+    ©Wester&Maggile 2026
+  </footer>
+
+  <script>
+    // Constante referencial de Unidad de Referencia Procesal (URP)
+    const URP_VALUE = 550;
+
+    // Feriados nacionales calendario Perú (formato YYYY-MM-DD)
+    const FERIADOS_PERU = new Set([
+      // 2025
+      "2025-01-01", "2025-04-17", "2025-04-18", "2025-05-01", "2025-06-07",
+      "2025-06-29", "2025-07-23", "2025-07-28", "2025-07-29", "2025-08-06",
+      "2025-08-30", "2025-10-08", "2025-11-01", "2025-12-08", "2025-12-09", "2025-12-25",
+      // 2026
+      "2026-01-01", "2026-04-02", "2026-04-03", "2026-05-01", "2026-06-07",
+      "2026-06-29", "2026-07-23", "2026-07-28", "2026-07-29", "2026-08-06",
+      "2026-08-30", "2026-10-08", "2026-11-01", "2026-12-08", "2026-12-09", "2026-12-25",
+      // 2027
+      "2027-01-01", "2027-03-25", "2027-03-26", "2027-05-01", "2027-06-07",
+      "2027-06-29", "2027-07-23", "2027-07-28", "2027-07-29", "2027-08-06",
+      "2027-08-30", "2027-10-08", "2027-11-01", "2027-12-08", "2027-12-09", "2027-12-25"
+    ]);
+
+    const DIAS_SEMANA = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+    const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+
+    function toISODate(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function parseISODate(isoStr) {
+      const [y, m, d] = isoStr.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function addDays(date, days) {
+      const copy = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      copy.setDate(copy.getDate() + days);
+      return copy;
+    }
+
+    function formatReadableDate(date) {
+      const dow = DIAS_SEMANA[date.getDay()];
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = MESES[date.getMonth()];
+      const year = date.getFullYear();
+      return `${dow} ${day} ${month} ${year}`;
+    }
+
+    function getDayStatus(date) {
+      const iso = toISODate(date);
+      const dow = date.getDay();
+      if (FERIADOS_PERU.has(iso)) {
+        return { habil: false, motivo: "Feriado nacional" };
+      }
+      if (dow === 0) {
+        return { habil: false, motivo: "Domingo" };
+      }
+      if (dow === 6) {
+        return { habil: false, motivo: "Sábado" };
+      }
+      return { habil: true, motivo: "Día hábil" };
+    }
+
+    function nextBusinessDay(date) {
+      let current = addDays(date, 1);
+      while (!getDayStatus(current).habil) {
+        current = addDays(current, 1);
+      }
+      return current;
+    }
+
+    // Navegación entre pestañas
+    function switchTab(tabName) {
+      const panels = ["plazos", "triaje", "escritos", "logic"];
+      panels.forEach((p) => {
+        document.getElementById(`panel-${p}`).classList.toggle("hidden", p !== tabName);
+        document.getElementById(`tab-${p}`).classList.toggle("active", p === tabName);
+      });
+    }
+
+    // =========================================================
+    // LÓGICA MÓDULO 1: CALCULADORA DE PLAZOS
+    // =========================================================
+    function applyDeadlinePreset() {
+      const preset = document.getElementById("plazo-preset").value;
+      const daysInput = document.getElementById("plazo-dias");
+      if (preset !== "custom") {
+        daysInput.value = preset;
+      }
+      calculateDeadline();
+    }
+
+    function fillDeadlineExample() {
+      document.getElementById("plazo-preset").value = "5";
+      document.getElementById("plazo-fecha").value = "2026-03-30"; // Semana Santa cercana en abril 2026
+      document.getElementById("plazo-dias").value = "5";
+      document.getElementById("plazo-notif").value = "sinoe";
+      calculateDeadline();
+    }
+
+    function calculateDeadline() {
+      const fechaStr = document.getElementById("plazo-fecha").value;
+      const diasHabiles = Math.max(1, Math.min(365, parseInt(document.getElementById("plazo-dias").value || "1", 10)));
+      const notifMode = document.getElementById("plazo-notif").value;
+
+      if (!fechaStr) return;
+
+      const fechaNotif = parseISODate(fechaStr);
+      const logs = [];
+
+      // Determinar día de inicio de cómputo
+      let inicioComputo;
+      if (notifMode === "fisica") {
+        inicioComputo = nextBusinessDay(fechaNotif);
+        logs.push({
+          date: fechaNotif,
+          tag: "Notificación física",
+          detail: "Surte efecto al día hábil siguiente (regla general de notificación por cédula).",
+          habil: false,
+          countLabel: "—"
+        });
+      } else {
+        inicioComputo = fechaNotif;
+        const st = getDayStatus(fechaNotif);
+        logs.push({
+          date: fechaNotif,
+          tag: "Notificación electrónica",
+          detail: st.habil ? "Notificado en día hábil; el cómputo corre desde el día hábil siguiente." : `Notificado en ${st.motivo.toLowerCase()}; surte efecto el siguiente día hábil.`,
+          habil: st.habil,
+          countLabel: "Base"
+        });
+      }
+
+      let cursor = inicioComputo;
+      let contados = 0;
+      let vencimiento = null;
+      let safety = 0;
+
+      while (contados < diasHabiles && safety < 800) {
+        cursor = addDays(cursor, 1);
+        safety++;
+        const st = getDayStatus(cursor);
+        if (st.habil) {
+          contados++;
+          logs.push({
+            date: cursor,
+            tag: `Día hábil ${contados} de ${diasHabiles}`,
+            detail: "Computable para el plazo.",
+            habil: true,
+            countLabel: `${contados}/${diasHabiles}`
+          });
+          if (contados === diasHabiles) {
+            vencimiento = cursor;
+          }
+        } else {
+          logs.push({
+            date: cursor,
+            tag: st.motivo,
+            detail: "No computable (excluido del conteo).",
+            habil: false,
+            countLabel: "Inhábil"
+          });
+        }
+      }
+
+      // Ajuste si el vencimiento cayera en día inhábil
+      let prorrogado = false;
+      while (vencimiento && !getDayStatus(vencimiento).habil) {
+        vencimiento = addDays(vencimiento, 1);
+        prorrogado = true;
+      }
+
+      const diasRestantes = Math.ceil((vencimiento - new Date(new Date().setHours(0, 0, 0, 0))) / (1000 * 60 * 60 * 24));
+      let estadoBadge = "";
+      if (diasRestantes < 0) {
+        estadoBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">Vencido hace ${Math.abs(diasRestantes)} días calendario</span>`;
+      } else if (diasRestantes === 0) {
+        estadoBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">Vence HOY</span>`;
+      } else {
+        estadoBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Faltan ${diasRestantes} días calendario</span>`;
+      }
+
+      document.getElementById("plazo-resultado").innerHTML = `
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div>
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Fecha límite estimada</span>
+            <h3 class="text-2xl font-extrabold text-navy-900 mt-0.5">${formatReadableDate(vencimiento)}</h3>
+          </div>
+          ${estadoBadge}
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 border border-slate-200 rounded-lg p-3.5 text-xs">
+          <div>
+            <span class="text-slate-500 block">Fecha notificada</span>
+            <strong class="text-navy-900">${formatReadableDate(fechaNotif)}</strong>
+          </div>
+          <div>
+            <span class="text-slate-500 block">Inicio del cómputo</span>
+            <strong class="text-navy-900">${formatReadableDate(inicioComputo)}</strong>
+          </div>
+          <div>
+            <span class="text-slate-500 block">Plazo aplicado</span>
+            <strong class="text-navy-900">${diasHabiles} días hábiles${prorrogado ? " (prorrogado)" : ""}</strong>
+          </div>
+        </div>
+      `;
+
+      document.getElementById("plazo-contador-badge").textContent = `${logs.length} días revisados`;
+      document.getElementById("plazo-log").innerHTML = logs.map((item) => `
+        <div class="py-2 flex items-center justify-between gap-3 ${item.habil ? "" : "text-slate-400"}">
+          <div>
+            <span class="font-semibold ${item.habil ? "text-navy-900" : "text-slate-500"}">${formatReadableDate(item.date)}</span>
+            <span class="ml-2 text-[11px] px-2 py-0.5 rounded ${item.habil ? "bg-emerald-50 text-emerald-700 font-medium" : "bg-slate-100 text-slate-500"}">${item.tag}</span>
+            <p class="text-[11px] text-slate-500 mt-0.5">${item.detail}</p>
+          </div>
+          <span class="font-mono text-xs font-bold shrink-0 ${item.habil ? "text-navy-900" : "text-slate-400"}">${item.countLabel}</span>
+        </div>
+      `).join("");
+    }
+
+    // =========================================================
+    // LÓGICA MÓDULO 2: TRIAJE Y CLASIFICACIÓN DE CASOS
+    // =========================================================
+    function fillCaseExample() {
+      document.getElementById("caso-titulo").value = "Resolución de contrato y cobro de penalidad";
+      document.getElementById("caso-materia").value = "civil";
+      document.getElementById("caso-urgencia").value = "alta";
+      document.getElementById("caso-cuantia").value = "85000";
+      document.getElementById("caso-docs").checked = true;
+      document.getElementById("caso-concilia").checked = false;
+      evaluateCase();
+    }
+
+    function evaluateCase() {
+      const titulo = document.getElementById("caso-titulo").value.trim() || "Consulta / Expediente sin título";
+      const materia = document.getElementById("caso-materia").value;
+      const urgencia = document.getElementById("caso-urgencia").value;
+      const cuantia = Math.max(0, parseFloat(document.getElementById("caso-cuantia").value || "0"));
+      const tieneDocs = document.getElementById("caso-docs").checked;
+      const tieneConcilia = document.getElementById("caso-concilia").checked;
+
+      const urpEquiv = (cuantia / URP_VALUE).toFixed(1);
+      document.getElementById("caso-urp-equiv").textContent = `Equivale aprox. a ${urpEquiv} URP (1 URP = S/ ${URP_VALUE}).`;
+
+      // Cálculo de puntaje de prioridad
+      const mapaUrgencia = { baja: 1, media: 2, alta: 4, critica: 6 };
+      let score = mapaUrgencia[urgencia] || 1;
+      if (cuantia >= 50000) score += 2;
+      else if (cuantia >= 10000) score += 1;
+      if (!tieneDocs) score += 1;
+
+      let prioridad = { label: "PRIORIDAD BAJA", cls: "bg-slate-100 text-slate-700 border-slate-300", sla: "Revisión en 3 a 5 días hábiles" };
+      if (score >= 6) {
+        prioridad = { label: "PRIORIDAD ALTA", cls: "bg-red-100 text-red-800 border-red-300", sla: "Atención inmediata (< 24 horas hábiles)" };
+      } else if (score >= 3) {
+        prioridad = { label: "PRIORIDAD MEDIA", cls: "bg-amber-100 text-amber-800 border-amber-300", sla: "Revisión en 48 horas hábiles" };
+      }
+
+      // Orientación por materia y cuantía (referencial)
+      let viaSugerida = "";
+      let checklist = [];
+
+      if (materia === "civil") {
+        const numUrp = cuantia / URP_VALUE;
+        if (numUrp <= 100) {
+          viaSugerida = "Evaluar vía sumarísima / Paz Letrado (según pretensión y cuantía referencial en URP).";
+        } else if (numUrp <= 1000) {
+          viaSugerida = "Evaluar vía abreviada o de conocimiento ante Juzgado Civil.";
+        } else {
+          viaSugerida = "Evaluar vía de conocimiento ante Juzgado Civil por mayor cuantía.";
+        }
+        checklist = [
+          "DNI o vigencia de poder / RUC actualizado.",
+          "Contrato, documento de obligación o sustento de la pretensión.",
+          tieneConcilia ? "Acta de Conciliación Extrajudicial (registrada)." : "Pendiente: verificar si exige Acta de Conciliación Extrajudicial previa.",
+          "Liquidación o sustento del monto reclamado."
+        ];
+      } else if (materia === "laboral") {
+        viaSugerida = "Evaluar proceso laboral (abreviado u ordinario) o reclamo administrativo previo según régimen.";
+        checklist = [
+          "Contrato de trabajo, boletas de pago o constancia de transferencia.",
+          "Carta de despido, cese o requerimiento previo (si aplica).",
+          "Cálculo preliminar de beneficios sociales o adeudos."
+        ];
+      } else if (materia === "familia") {
+        viaSugerida = "Evaluar competencia en Juzgado de Paz Letrado / Familia y medidas de protección o asignación.";
+        checklist = [
+          "Partida de nacimiento o documento que acredite vínculo.",
+          "Sustento de necesidades o capacidad económica (boletas, declaraciones).",
+          "Datos completos y domicilio o correo de la contraparte."
+        ];
+      } else if (materia === "admin") {
+        viaSugerida = "Evaluar vía administrativa (recurso de reconsideración o apelación) o contencioso-administrativa.";
+        checklist = [
+          "Resolución, carta o acto administrativo materia de análisis.",
+          "Cargo o constancia de fecha de notificación (clave para el plazo).",
+          "Medios probatorios o argumentos de hecho y derecho."
+        ];
+      } else {
+        viaSugerida = "Evaluar diligencias preliminares, denuncia de parte o defensa técnica urgente.";
+        checklist = [
+          "Relato cronológico de hechos, fechas y participantes.",
+          "Evidencias digitales, documentos, testigos o partes policiales.",
+          "Verificación inmediata de plazos o medidas vigentes."
+        ];
+      }
+
+      if (!tieneDocs) {
+        checklist.unshift("Alerta de triaje: solicitar al usuario o cliente los documentos base antes de redactar demanda/recurso.");
+      }
+
+      document.getElementById("triaje-resultado").innerHTML = `
+        <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
+          <div>
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Resultado de clasificación</span>
+            <h3 class="text-lg font-bold text-navy-900 mt-0.5">${escapeHtml(titulo)}</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Puntaje interno de triaje: <strong>${score}</strong> · Cuantía: <strong>S/ ${cuantia.toLocaleString("es-PE", { minimumFractionDigits: 2 })}</strong></p>
+          </div>
+          <span class="px-3 py-1 rounded-full text-xs font-extrabold border ${prioridad.cls}">${prioridad.label}</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div class="bg-slate-50 border border-slate-200 rounded-lg p-3.5">
+            <span class="text-slate-500 block font-medium">Ventana de atención sugerida</span>
+            <strong class="text-navy-900 text-sm">${prioridad.sla}</strong>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-lg p-3.5">
+            <span class="text-slate-500 block font-medium">Orientación de vía / trámite</span>
+            <strong class="text-navy-900">${viaSugerida}</strong>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-navy-900 mb-2">Checklist preliminar de recaudos</h4>
+          <ul class="space-y-2 text-sm text-slate-700">
+            ${checklist.map((item) => `
+              <li class="flex items-start gap-2 bg-slate-50/70 border border-slate-100 rounded-lg p-2.5">
+                <span class="text-gold-600 font-bold">✓</span>
+                <span>${item}</span>
+              </li>
+            `).join("")}
+          </ul>
+        </div>
+      `;
+    }
+
+    // =========================================================
+    // LÓGICA MÓDULO 3: GENERADOR DE ESCRITOS LEGALES
+    // =========================================================
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function fillDocExample() {
+      document.getElementById("doc-tipo").value = "reconsideracion";
+      document.getElementById("doc-autoridad").value = "Dirección de Fiscalización y Sanción";
+      document.getElementById("doc-exp").value = "EXP-2026-0194-DFS";
+      document.getElementById("doc-esp").value = "Área de Procedimientos Administrativos";
+      document.getElementById("doc-parte").value = "Gabriela Daniela Salinas Cruz";
+      document.getElementById("doc-docid").value = "72481905";
+      document.getElementById("doc-casilla").value = "gsalinas.juridica@ejemplo.pe";
+      document.getElementById("doc-abogado").value = "Dr. Jorge Luis Mendoza / CAL 65412";
+      document.getElementById("doc-detalle").value = "Se adjunta constancia de cumplimiento oportuno emitida con fecha anterior a la resolución impugnada, la cual constituye nueva prueba que acredita la inexistencia de infracción.";
+      renderDocument();
+    }
+
+    function renderDocument() {
+      const tipo = document.getElementById("doc-tipo").value;
+      const autoridad = escapeHtml(document.getElementById("doc-autoridad").value.trim() || "[AUTORIDAD / JUZGADO / ENTIDAD]");
+      const exp = escapeHtml(document.getElementById("doc-exp").value.trim() || "[N° DE EXPEDIENTE]");
+      const esp = escapeHtml(document.getElementById("doc-esp").value.trim() || "[ESPECIALISTA / ÁREA]");
+      const parte = escapeHtml(document.getElementById("doc-parte").value.trim() || "[NOMBRE DEL SOLICITANTE / LITIGANTE]");
+      const docId = escapeHtml(document.getElementById("doc-docid").value.trim() || "[DNI / RUC]");
+      const casilla = escapeHtml(document.getElementById("doc-casilla").value.trim() || "[CASILLA ELECTRÓNICA / CORREO]");
+      const abogado = escapeHtml(document.getElementById("doc-abogado").value.trim() || "[ABOGADO PATROCINANTE / COLEGIATURA]");
+      const detalle = escapeHtml(document.getElementById("doc-detalle").value.trim() || "[DESCRIBIR HECHOS, NUEVA PRUEBA O INFORMACIÓN SOLICITADA]");
+
+      const hoy = formatReadableDate(new Date());
+
+      let html = "";
+
+      if (tipo === "apersonamiento") {
+        html = `
+          <div class="text-right text-xs space-y-0.5 mb-5">
+            <p><strong>EXPEDIENTE:</strong> ${exp}</p>
+            <p><strong>ESPECIALISTA:</strong> ${esp}</p>
+            <p><strong>SUMILLA:</strong> APERSONAMIENTO Y SEÑALAMIENTO DE CASILLA</p>
+          </div>
+          <p class="font-bold uppercase mb-3">SEÑOR(A) DE: ${autoridad}</p>
+          <p class="mb-3 text-justify">
+            <strong>${parte}</strong>, identificado(a) con DNI/RUC N° <strong>${docId}</strong>, señalando domicilio procesal o casilla electrónica en <strong>${casilla}</strong>, a Ud. respetuosamente digo:
+          </p>
+          <p class="mb-2 font-bold uppercase text-xs">I. PETITORIO</p>
+          <p class="mb-3 text-justify">
+            Que, me apersono formalmente a la presente instancia y solicito que se tengan por señalados mis datos de notificación y defensa técnica.
+          </p>
+          <p class="mb-2 font-bold uppercase text-xs">II. FUNDAMENTOS</p>
+          <p class="mb-4 text-justify">
+            ${detalle}
+          </p>
+          <p class="mb-6 text-justify">
+            <strong>POR TANTO:</strong> Pido a Ud. tener presente lo expuesto y proveer conforme a ley.
+          </p>
+          <p class="text-right text-xs mb-8">Lima, ${hoy}.</p>
+          <div class="grid grid-cols-2 gap-6 text-center text-xs pt-4">
+            <div class="border-t border-slate-400 pt-1">${parte}<br/>Solicitante / Parte</div>
+            <div class="border-t border-slate-400 pt-1">${abogado}<br/>Abogado(a)</div>
+          </div>
+        `;
+      } else if (tipo === "reconsideracion") {
+        html = `
+          <div class="text-right text-xs space-y-0.5 mb-5">
+            <p><strong>EXPEDIENTE:</strong> ${exp}</p>
+            <p><strong>ÁREA / ESP.:</strong> ${esp}</p>
+            <p><strong>SUMILLA:</strong> INTERPONGO RECURSO DE RECONSIDERACIÓN</p>
+          </div>
+          <p class="font-bold uppercase mb-3">A: ${autoridad}</p>
+          <p class="mb-3 text-justify">
+            <strong>${parte}</strong>, identificado(a) con DNI/RUC N° <strong>${docId}</strong>, con domicilio o notificación en <strong>${casilla}</strong>, me presento y expongo:
+          </p>
+          <p class="mb-2 font-bold uppercase text-xs">I. PETITORIO</p>
+          <p class="mb-3 text-justify">
+            Que, dentro del plazo de ley, interpongo <strong>recurso de reconsideración</strong> contra el acto administrativo recaído en el expediente de la referencia, sustentado en nueva prueba, a fin de que se revoque o modifique lo resuelto.
+          </p>
+          <p class="mb-2 font-bold uppercase text-xs">II. NUEVA PRUEBA Y FUNDAMENTACIÓN</p>
+          <p class="mb-4 text-justify">
+            ${detalle}
+          </p>
+          <p class="mb-6 text-justify">
+            <strong>POR TANTO:</strong> Solicito admitir el presente recurso, valorar la prueba acompañada y resolver conforme a derecho.
+          </p>
+          <p class="text-right text-xs mb-8">Lima, ${hoy}.</p>
+          <div class="grid grid-cols-2 gap-6 text-center text-xs pt-4">
+            <div class="border-t border-slate-400 pt-1">${parte}<br/>Administrado(a)</div>
+            <div class="border-t border-slate-400 pt-1">${abogado}<br/>Abogado(a)</div>
+          </div>
+        `;
+      } else {
+        html = `
+          <div class="text-right text-xs space-y-0.5 mb-5">
+            <p><strong>REGISTRO / REF.:</strong> ${exp}</p>
+            <p><strong>UNIDAD:</strong> ${esp}</p>
+            <p><strong>SUMILLA:</strong> SOLICITUD DE ACCESO A LA INFORMACIÓN PÚBLICA</p>
+          </div>
+          <p class="font-bold uppercase mb-3">SEÑOR(A) FUNCIONARIO(A) RESPONSABLE DE ACCESO A LA INFORMACIÓN DE: ${autoridad}</p>
+          <p class="mb-3 text-justify">
+            <strong>${parte}</strong>, identificado(a) con DNI/RUC N° <strong>${docId}</strong>, indicando como medio de entrega o notificación <strong>${casilla}</strong>, solicito se me brinde la siguiente información pública:
+          </p>
+          <p class="mb-2 font-bold uppercase text-xs">I. INFORMACIÓN SOLICITADA</p>
+          <p class="mb-4 text-justify">
+            ${detalle}
+          </p>
+          <p class="mb-6 text-justify">
+            <strong>POR TANTO:</strong> Pido atender la presente solicitud dentro del plazo legal correspondiente y precisar, de ser el caso, el costo de reproducción respectivo.
+          </p>
+          <p class="text-right text-xs mb-8">Lima, ${hoy}.</p>
+          <div class="border-t border-slate-400 pt-1 w-64 text-center text-xs mx-auto">
+            ${parte}<br/>DNI/RUC: ${docId}
+          </div>
+        `;
+      }
+
+      document.getElementById("doc-preview").innerHTML = html;
+    }
+
+    function copyDocument() {
+      const preview = document.getElementById("doc-preview");
+      const text = preview.innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById("btn-copy-doc");
+        const original = btn.textContent;
+        btn.textContent = "¡Copiado!";
+        setTimeout(() => { btn.textContent = original; }, 1600);
+      });
+    }
+
+    function resetAll() {
+      document.getElementById("plazo-fecha").value = toISODate(new Date());
+      document.getElementById("plazo-preset").value = "5";
+      document.getElementById("plazo-dias").value = "5";
+      document.getElementById("plazo-notif").value = "sinoe";
+
+      document.getElementById("caso-titulo").value = "";
+      document.getElementById("caso-materia").value = "civil";
+      document.getElementById("caso-urgencia").value = "media";
+      document.getElementById("caso-cuantia").value = "25000";
+      document.getElementById("caso-docs").checked = true;
+      document.getElementById("caso-concilia").checked = false;
+
+      ["doc-autoridad", "doc-exp", "doc-esp", "doc-parte", "doc-docid", "doc-casilla", "doc-abogado", "doc-detalle"]
+        .forEach((id) => { document.getElementById(id).value = ""; });
+      document.getElementById("doc-tipo").value = "apersonamiento";
+
+      calculateDeadline();
+      evaluateCase();
+      renderDocument();
+    }
+
+    // Inicialización al cargar la página
+    window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("plazo-fecha").value = toISODate(new Date());
+      calculateDeadline();
+      evaluateCase();
+      renderDocument();
+    });
+  </script>
+</body>
+</html>
